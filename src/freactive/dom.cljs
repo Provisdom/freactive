@@ -1,23 +1,23 @@
 (ns freactive.dom
   (:require
-   [freactive.core :as r]
-   [freactive.ui-common :as ui]
-   [goog.object]))
+    [freactive.core :as r]
+    [freactive.ui-common :as ui]
+    [goog.object]))
 
 ;; ## Polyfills
 
 (def request-animation-frame
   (or
-   (.-requestAnimationFrame js/window)
-   (.-webkitRequestAnimationFrame js/window)
-   (.-mozRequestAnimationFrame js/window)
-   (.-msRequestAnimationFrame js/window)
-   (.-oRequestAnimationFrame js/window)
-   (let [t0 (.getTime (js/Date.))]
-     (fn [f]
-       (js/setTimeout
-        #(f (- (.getTime (js/Date.)) t0))
-        16.66666)))))
+    (.-requestAnimationFrame js/window)
+    (.-webkitRequestAnimationFrame js/window)
+    (.-mozRequestAnimationFrame js/window)
+    (.-msRequestAnimationFrame js/window)
+    (.-oRequestAnimationFrame js/window)
+    (let [t0 (.getTime (js/Date.))]
+      (fn [f]
+        (js/setTimeout
+          #(f (- (.getTime (js/Date.)) t0))
+          16.66666)))))
 
 ;; Render Loop
 
@@ -105,15 +105,26 @@ map in velem."
 
 (def ^:private node-ns-lookup
   #js
-  {"svg" "http://www.w3.org/2000/svg"})
+      {"svg" "http://www.w3.org/2000/svg"})
 
 (defn register-node-prefix! [prefix xml-ns-or-handler]
   (aset node-ns-lookup (name prefix) xml-ns-or-handler))
 
+(def ^:private tag-name-lookup
+  #js
+      {})
+
+(defn register-tag-name! [tag]
+  (aset tag-name-lookup (name tag) true))
+
+(defn- tag-registered?
+  [tag]
+  (.hasOwnProperty tag-name-lookup (name tag)))
+
 (def ^:private attr-ns-lookup
   #js
-  {"node" (fn [_ _ _])
-   "state" (fn [_ _ _])})
+      {"node"  (fn [_ _ _])
+       "state" (fn [_ _ _])})
 
 (defn register-attr-prefix! [prefix xml-ns-or-handler]
   (aset attr-ns-lookup (name prefix) xml-ns-or-handler))
@@ -126,7 +137,7 @@ map in velem."
 (defn- dom-insert [parent dom-node vnext-sibling]
   (let [dom-parent (ui/native-parent parent)]
     ;; (when vnext-sibling (println "vnext" (type vnext-sibling)))
-    (if-let [dom-before (ui/next-native-sibling vnext-sibling)] 
+    (if-let [dom-before (ui/next-native-sibling vnext-sibling)]
       (do
         ;; (println "insert" (goog/getUid dom-node)
         ;;          "dom-parent" dom-parent (goog/getUid dom-parent)
@@ -168,7 +179,7 @@ map in velem."
     (dom-insert vparent node vnext-sibling)
     this)
   (-velem-take [this]
-    (dom-remove node)) 
+    (dom-remove node))
   (-velem-replace [this old-velem]
     (if-let [old-node (ui/velem-native-element old-velem)]
       (dom-simple-replace node old-node)
@@ -211,18 +222,18 @@ map in velem."
     (when clean-fn (clean-fn))
     (when states
       (goog.object/forEach
-       states
-       (fn [state k _]
-         (when state
-           (when (.-clean state)
-             (.clean state)))))))
+        states
+        (fn [state k _]
+          (when state
+            (when (.-clean state)
+              (.clean state)))))))
   (dispose [this]
     (when states
       (goog.object/forEach
-       states
-       (fn [state k _]
-         (when state
-           (r/dispose state)))))))
+        states
+        (fn [state k _]
+          (when state
+            (r/dispose state)))))))
 
 (defn- wrap-attr-map-binder
   ([bind-fn]
@@ -265,7 +276,7 @@ map in velem."
 (defn ^:dynamic ^:pluggable unlisten!
   "Removes an event handler. Can be replaced by a plugin such as goog.events."
   [element evt-name handler]
-  (.removeEventListener  element evt-name handler))
+  (.removeEventListener element evt-name handler))
 
 (deftype EventBinding [node event-name ^:mutable handler]
   IFn
@@ -305,22 +316,22 @@ map in velem."
 
 (defn- set-data-state!
   ([element state]
-    (let [cur-state (get-data-state element)
-          node-state (get-element-state element)
-          state (when state (name state))]
-      (when-not (identical? cur-state state)
-        (do-set-data-state! element state)
-        (when-let [enter-transition (get-state-attr node-state (str ":state/on-" state))]
-          (enter-transition element cur-state state))))))
+   (let [cur-state (get-data-state element)
+         node-state (get-element-state element)
+         state (when state (name state))]
+     (when-not (identical? cur-state state)
+       (do-set-data-state! element state)
+       (when-let [enter-transition (get-state-attr node-state (str ":state/on-" state))]
+         (enter-transition element cur-state state))))))
 
 (def ^:private attr-setters
   #js
-  {:data-state (fn [element state]
-                 (set-data-state! element state)
-                 state)
-   :class (fn [element cls]
-            (set! (.-className element) (if (nil? cls) "" cls))
-            cls)})
+      {:data-state (fn [element state]
+                     (set-data-state! element state)
+                     state)
+       :class      (fn [element cls]
+                     (set! (.-className element) (if (nil? cls) "" cls))
+                     cls)})
 
 ;; attributes to set directly
 (doseq [a #js ["id" "value"]]
@@ -334,16 +345,16 @@ map in velem."
 
 (defn- get-ns-attr-setter [element attr-ns attr-name]
   (fn [attr-value]
-      ;(println "setting attr" element attr-name attr-value)
-      (if attr-value
-        (.setAttributeNS element attr-ns attr-name
-          (normalize-attr-value attr-value))
-        (.removeAttributeNS element attr-ns attr-name))
-      attr-value))
+    ;(println "setting attr" element attr-name attr-value)
+    (if attr-value
+      (.setAttributeNS element attr-ns attr-name
+                       (normalize-attr-value attr-value))
+      (.removeAttributeNS element attr-ns attr-name))
+    attr-value))
 
 (def ^:private special-attrs
   #js {"events" (wrap-attr-map-binder bind-event!)
-       "style" (wrap-attr-map-binder bind-style!)})
+       "style"  (wrap-attr-map-binder bind-style!)})
 
 (defn- bind-attr! [element attr-key attr-value]
   (let [attr-ns (namespace attr-key)
@@ -383,14 +394,14 @@ map in velem."
       (r/dispose (aget children i))))
   (ensureNode [this]
     (when-not node
-      (set! node
-            (if ns-uri
-              (.createElementNS js/document ns-uri tag)
-              (.createElement js/document tag)))
-      (set! (.-freactive-state node) this)
-      (set! attr-binder (bind-attrs! node attrs))
-      (doseq [child children]
-        (ui/velem-insert child this nil))))
+      (let [elem (if ns-uri
+                   (.createElementNS js/document ns-uri tag)
+                   (.createElement js/document tag))]
+        (set! node elem)
+        (set! (.-freactive-state node) this)
+        (set! attr-binder (bind-attrs! node attrs))
+        (doseq [child children]
+          (ui/velem-insert child this nil)))))
   (onAttached [this]
     (when-let [on-attached (get attrs :node/on-attached)]
       (on-attached node)))
@@ -412,7 +423,62 @@ map in velem."
     (.onAttached this)
     this)
   (-velem-take [this]
-    (dom-remove node)) 
+    (dom-remove node))
+  (-velem-replace [this old-velem]
+    (.ensureNode this)
+    (if-let [old-node (ui/velem-native-element old-velem)]
+      (do
+        (dom-simple-replace node old-node)
+        (r/dispose old-velem))
+      (dom-remove-replace node old-velem))
+    (.onAttached this)
+    this)
+  (-velem-lifecycle-callback [this cb-name]
+    (get attrs cb-name)))
+
+(deftype ChildDOMElement [ns-uri tag ^:mutable attrs children ^:mutable node
+                          ^:mutable parent ^:mutable attr-binder child-dom]
+  IHash
+  (-hash [this] (goog/getUid this))
+
+  Object
+  (dispose [this]
+    (r/dispose attr-binder)
+    (doseq [i (range (.-length children))]
+      (r/dispose (aget children i))))
+  (ensureNode [this]
+    (when-not node
+      (let [elem (if ns-uri
+                   (.createElementNS js/document ns-uri tag)
+                   (.createElement js/document tag))]
+        (set! node elem)
+        (set! (.-freactive-state node) this)
+        (set! attr-binder (bind-attrs! node attrs))
+        (aset elem "cereus/child-dom" child-dom)
+        (doseq [child children]
+          (ui/velem-insert child this nil)))))
+  (onAttached [this]
+    (when-let [on-attached (get attrs :node/on-attached)]
+      (on-attached node)))
+  (updateAttrs [this new-attrs]
+    (set! attr-binder (attr-binder node new-attrs))
+    (set! attrs new-attrs))
+
+  ui/IVirtualElement
+  (-velem-parent [this] parent)
+  (-velem-head [this] this)
+  (-velem-next-sibling-of [this child]
+    (ui/array-next-sibling-of children child))
+  (-velem-native-element [this] node)
+  (-velem-simple-element [this] this)
+  (-velem-insert [this vparent vnext-sibling]
+    (set! parent vparent)
+    (.ensureNode this)
+    (dom-insert parent node vnext-sibling)
+    (.onAttached this)
+    this)
+  (-velem-take [this]
+    (dom-remove node))
   (-velem-replace [this old-velem]
     (.ensureNode this)
     (if-let [old-node (ui/velem-native-element old-velem)]
@@ -447,7 +513,7 @@ map in velem."
     (dom-insert parent node vnext-sibling)
     this)
   (-velem-take [this]
-    (dom-remove node)) 
+    (dom-remove node))
   (-velem-replace [this old-velem]
     (if-let [old-node (ui/velem-native-element old-velem)]
       (do
@@ -473,7 +539,7 @@ map in velem."
 Can be used to define custom conversions to DOM nodes or text for things such as numbers
 or dates; or can be used to define containers for DOM elements themselves."
   (-get-dom-image [x]
-    "Should return either virtual DOM (a vector or string) or an actual DOM node."))
+                  "Should return either virtual DOM (a vector or string) or an actual DOM node."))
 
 (extend-protocol IDOMImage
   object
@@ -489,9 +555,9 @@ or dates; or can be used to define containers for DOM elements themselves."
   (-get-dom-image [x] (str x)))
 
 ;; From hiccup.compiler:
-(def ^{:doc "Regular expression that parses a CSS-style id and class from an element name."
+(def ^{:doc     "Regular expression that parses a CSS-style id and class from an element name."
        :private true}
-     re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
+re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
 
 (def ^:private re-dot (js/RegExp. "\\." "g"))
 
@@ -511,26 +577,30 @@ or dates; or can be used to define containers for DOM elements themselves."
         (.push ch-res (velem-fn ch))))
     ch-res))
 
-(defn element* [elem-factory append-children-fn]
-  (fn [ns-uri tag tail]
-    (let [[_ tag-name id class] (re-matches re-tag tag)
-          attrs? (first tail)
-          have-attrs (map? attrs?)
-          attrs (if have-attrs attrs? {})
-          attrs (cond-> attrs
+(defn element*
+  ([elem-factory append-children-fn]
+   (fn [ns-uri tag tail]
+     (let [[_ tag-name id class] (re-matches re-tag (name tag))
+           attrs? (first tail)
+           have-attrs (map? attrs?)
+           attrs (if have-attrs attrs? {})
+           attrs (cond-> attrs
 
-                  (and id (not (:id attrs)))
-                  (assoc :id id)
-                  
-                  class
-                  (update :class
-                          (fn [cls]
-                            (let [class (.replace class re-dot " ")]
-                              (if cls (str class " " cls) class)))))
+                         (and id (not (:id attrs)))
+                         (assoc :id id)
 
-          children (if have-attrs (rest tail) tail)
-          children* (append-children-fn #js [] children)]
-      (elem-factory ns-uri tag-name attrs children*))))
+                         class
+                         (update :class
+                                 (fn [cls]
+                                   (let [class (.replace class re-dot " ")]
+                                     (if cls (str class " " cls) class)))))]
+       (if (some? append-children-fn)
+         (let [children (if have-attrs (rest tail) tail)
+               children* (append-children-fn #js [] children)]
+           (elem-factory ns-uri tag-name attrs children* tail))
+         (elem-factory ns-uri tag-name attrs [] tail)))))
+  ([elem-factory]
+   (element* elem-factory nil)))
 
 (defn- dom-node? [x]
   (and x (> (.-nodeType x) 0)))
@@ -550,6 +620,7 @@ or dates; or can be used to define containers for DOM elements themselves."
     state))
 
 (declare dom-element)
+(declare child-dom-element)
 
 (defn- as-velem [elem-spec]
   (cond
@@ -580,10 +651,19 @@ or dates; or can be used to define containers for DOM elements themselves."
                 :default
                 (.warn js/console "Invalid ns node handler" tag-handler))
               (.warn js/console "Undefined ns node prefix" tag-ns))
-            (dom-element nil tag-name tail)))
+            (if (tag-registered? tag-name)
+              (as-velem (vec (cons true elem-spec)))
+              (dom-element nil tag-name tail))))
 
         (and (ifn? head) (not (sequential? head)))
         (as-velem (r/rx* (fn [] (apply head (rest elem-spec)))))
+
+        (= true head)
+        (let [elem-spec (rest elem-spec)
+              tag-name (first elem-spec)
+              tail (rest elem-spec)
+              tail (if (map? tail) (rest tail) tail)]
+          (child-dom-element nil tag-name tail))
 
         :default
         (as-velem (r/seq-projection elem-spec))))
@@ -604,9 +684,14 @@ or dates; or can be used to define containers for DOM elements themselves."
 
 (def dom-element
   (element*
-   (fn [ns-uri tag-name attrs children*]
-     (DOMElement. ns-uri tag-name attrs children* nil nil nil))
-   (append-children* as-velem)))
+    (fn [ns-uri tag-name attrs children*]
+      (DOMElement. ns-uri tag-name attrs children* nil nil nil))
+    (append-children* as-velem)))
+
+(def child-dom-element
+  (element*
+    (fn [ns-uri tag-name attrs children* tail]
+      (ChildDOMElement. ns-uri tag-name attrs children* nil nil nil tail))))
 
 
 ;; Public API
@@ -689,15 +774,15 @@ document body."
               (ui/velem-remove (as-velem (get-velem-state last-child)))
               (recur))))
         (let [vroot (DOMElement.
-                     (.-namespaceURI root-node)
-                     (.-tagName root-node)
-                     {}
-                     nil ;; TODO parent
-                     root-node
-                     nil
-                     (bind-attrs! root-node {}))]
+                      (.-namespaceURI root-node)
+                      (.-tagName root-node)
+                      {}
+                      nil                                   ;; TODO parent
+                      root-node
+                      nil
+                      (bind-attrs! root-node {}))]
           (configure-root! vroot vdom))))
-    root-node)) 
+    root-node))
 
 (defn unmount! [mount-point]
   (let [root-node
