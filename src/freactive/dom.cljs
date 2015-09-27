@@ -781,6 +781,7 @@ document body."
                       root-node
                       nil
                       (bind-attrs! root-node {}))]
+          (set! (.-freactive-state root-node) vroot)
           (configure-root! vroot vdom))))
     root-node))
 
