@@ -651,9 +651,10 @@ re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
                 :default
                 (.warn js/console "Invalid ns node handler" tag-handler))
               (.warn js/console "Undefined ns node prefix" tag-ns))
-            (if (tag-registered? tag-name)
-              (as-velem (vec (cons true elem-spec)))
-              (dom-element nil tag-name tail))))
+            (let [[_ tag id class] (re-matches re-tag (name tag-name))]
+              (if (tag-registered? tag)
+                (as-velem (vec (cons true elem-spec)))
+                (dom-element nil tag-name tail)))))
 
         (and (ifn? head) (not (sequential? head)))
         (as-velem (r/rx* (fn [] (apply head (rest elem-spec)))))
