@@ -454,7 +454,7 @@ map in velem."
         (set! node elem)
         (set! (.-freactive-state node) this)
         (set! attr-binder (bind-attrs! node attrs))
-        (aset elem "cereus/child-dom" child-dom)
+        (aset elem "cereus/child-dom" (if (map? (first child-dom)) (rest child-dom) child-dom))
         (doseq [child children]
           (ui/velem-insert child this nil)))))
   (onAttached [this]
@@ -580,6 +580,7 @@ re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
 (defn element*
   ([elem-factory append-children-fn]
    (fn [ns-uri tag tail]
+     (println "element" tag tail)
      (let [[_ tag-name id class] (re-matches re-tag (name tag))
            attrs? (first tail)
            have-attrs (map? attrs?)
@@ -661,8 +662,7 @@ re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
         (= true head)
         (let [elem-spec (rest elem-spec)
               tag-name (first elem-spec)
-              tail (rest elem-spec)
-              tail (if (map? tail) (rest tail) tail)]
+              tail (rest elem-spec)]
           (child-dom-element nil tag-name tail))
 
         :default
