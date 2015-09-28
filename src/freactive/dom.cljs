@@ -580,7 +580,6 @@ re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
 (defn element*
   ([elem-factory append-children-fn]
    (fn [ns-uri tag tail]
-     (println "element" tag tail)
      (let [[_ tag-name id class] (re-matches re-tag (name tag))
            attrs? (first tail)
            have-attrs (map? attrs?)
